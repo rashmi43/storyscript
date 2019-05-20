@@ -10,7 +10,7 @@ def matchandcreate(l, path_folder):
     errmsg = err[1].strip("\''")
     md_file = "{}/{}_metadata.md".format(path_folder, errcode)
     with open(md_file, 'w') as mdf:
-        mdf.write('{} {}'.format(errCode, errMsg.strip('\""')))
+        mdf.write('{} {}'.format(errcode, errmsg.strip('\""')))
                       
 def main():
     if not len(sys.argv) == 3:
