@@ -13,7 +13,7 @@ def matchandcreate(eachline, path_folder):
     err = group.split(',')
     errcode = err[0].strip("\''")
     errmsg = err[1].strip("\''")
-    md_file = "{}/{}_metadata.md".format(path_folder, errcode)
+    md_file = '{}/{}_metadata.md'.format(path_folder, errcode)
     with open(md_file, 'w') as mdf:
         mdf.write('{} {}'.format(errcode, errmsg.strip('\""')))
 
@@ -40,7 +40,7 @@ def main():
                     matchandcreate(line, path_folder)
                 else:
                     print('full line not matches')
-            elif line.find("=") > -1:
+            elif line.find('=') > -1:
                 foundstartline = True
                 compline = compline + line.strip()
             elif ((line.find(')') > -1) and foundstartline is True):
