@@ -1,13 +1,12 @@
-"""
-Final to dynamically create markdown from error codes
-"""
-#!/usr/local/bin/python
+# !/usr/local/bin/python
 import re
 import sys
 PATTERN = re.compile(r'(.*?)\s+\=\s+\((.*)?\)')
+
+
 def matchandcreate(eachline, path_folder):
     """
-    Parses each line and generates md file
+      Parses each line and generates md file
     """
     matchedobj = re.match(PATTERN, eachline)
     group = matchedobj.group(2)
@@ -18,9 +17,10 @@ def matchandcreate(eachline, path_folder):
     with open(md_file, 'w') as mdf:
         mdf.write('{} {}'.format(errcode, errmsg.strip('\""')))
 
+
 def main():
     """
-    main function reads error codes and parses them
+      main function reads error codes and parses them
     """
     if len(sys.argv) != 3:
         print('Please specify the output and input file')
@@ -58,5 +58,6 @@ def main():
             else:
                 continue
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     main()
