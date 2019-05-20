@@ -38,8 +38,6 @@ def main():
                 line = line.replace(r'\t+|\s+', '')
                 if re.match(PATTERN, line):
                     matchandcreate(line, path_folder)
-                else:
-                    print('full line not matches')
             elif line.find('=') > -1:
                 foundstartline = True
                 compline = compline + line.strip()
@@ -51,8 +49,6 @@ def main():
                 foundstartline = False
                 if re.match(PATTERN, savedline):
                     matchandcreate(savedline, path_folder)
-                else:
-                    print('not matches')
             elif foundstartline is True:
                 compline += line.strip()
             else:
