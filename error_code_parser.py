@@ -1,6 +1,6 @@
 # !/usr/local/bin/python
+import os
 import re
-import sys
 PATTERN = re.compile(r'(.*?)\s+\=\s+\((.*)?\)')
 
 
@@ -20,13 +20,15 @@ def matchandcreate(eachline, path_folder):
 
 def main():
     """
-      main function reads error codes and parses them
+      main function reads multiple lines as one line and
+      checks for lines matching regex to parse error codes.
+      Created a folder mdfiles to generate the md files.
     """
-    if len(sys.argv) != 3:
-        print('Please specify the output and input file')
-        sys.exit(0)
-    path_folder = sys.argv[1]
-    input_file = sys.argv[2]
+    path_folder = 'mdfiles'
+    if not os.path.exists(path_folder):
+        os.mkdir(path_folder)
+        print('Directory ', path_folder, 'created')
+    input_file = './storyscript/ErrorCodes.py'
     foundstartline = False
     compline = ''
     with open(input_file, 'r') as file:
