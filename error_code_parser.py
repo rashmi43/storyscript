@@ -2,8 +2,8 @@
 """
 Parse the error code to generate mdfiles
 """
-import os
 import argparse
+import os
 
 
 def matchandcreate(eachline, path_folder):
@@ -11,7 +11,6 @@ def matchandcreate(eachline, path_folder):
       Parses each line and generates md file
     """
     splitline = eachline.split('=')
-    #err = splitline[0]
     errorline = splitline[1].split(',')
     errcode = errorline[0][2:].strip("\''")
     errmsg = errorline[1][:len(errorline[1])-1]
@@ -27,7 +26,7 @@ def main():
       Created a folder mdfiles to generate the md files.
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument("error_file", help="Specify the path to the error file")
+    parser.add_argument('error_file', help='Specify path to the error file')
     args = parser.parse_args()
     path_folder = 'mdfiles'
     if not os.path.exists(path_folder):
