@@ -3,6 +3,7 @@
 Parse the error code to generate mdfiles
 """
 import os
+
 from storyscript.ErrorCodes import ErrorCodes
 
 
@@ -18,7 +19,7 @@ def main():
         print('Directory', path_folder, 'created')
     ec = ErrorCodes()
     members = [attr for attr in dir(ec) if not
-               callable(getattr(ec, attr)) and not attr.startswith("__")]
+               callable(getattr(ec, attr)) and not attr.startswith('__')]
     for error in members:
         err = ec.get_error(error)
         errcode = err[0]
@@ -26,6 +27,7 @@ def main():
         md_file = '{}/{}_metadata.md'.format(path_folder, errcode)
         with open(md_file, 'w') as mdf:
             mdf.write('{} - {}'.format(errcode, errmsg))
+
 
 if __name__ == '__main__':
     main()
