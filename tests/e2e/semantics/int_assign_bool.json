@@ -16,8 +16,15 @@
               "int": 1
             },
             {
-              "$OBJECT": "boolean",
-              "boolean": true
+              "$OBJECT": "type_cast",
+              "type": {
+                "$OBJECT": "type",
+                "type": "int"
+              },
+              "value": {
+                "$OBJECT": "boolean",
+                "boolean": true
+              }
             }
           ]
         }
