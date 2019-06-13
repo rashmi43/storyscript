@@ -62,7 +62,7 @@
           ]
         }
       ],
-      "src": "a = b and !c"
+      "src": "a = b and not c"
     }
   },
   "entrypoint": "1"

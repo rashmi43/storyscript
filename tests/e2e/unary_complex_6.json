@@ -50,7 +50,7 @@
           ]
         }
       ],
-      "src": "a = !-2 or ! -3 - !-4"
+      "src": "a = not -2 or not -3 - not -4"
     }
   },
   "entrypoint": "1"

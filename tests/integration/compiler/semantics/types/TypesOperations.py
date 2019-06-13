@@ -8,7 +8,7 @@ def is_boolean(op):
     """
     Tests whether an operation requires conversion to boolean.
     """
-    return op in ['or', 'and', '!']
+    return op in ['or', 'and', 'not']
 
 
 def is_cmp(op):

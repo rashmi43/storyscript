@@ -35,7 +35,7 @@
           ]
         }
       ],
-      "src": "a = !b"
+      "src": "a = not b"
     }
   },
   "entrypoint": "1"

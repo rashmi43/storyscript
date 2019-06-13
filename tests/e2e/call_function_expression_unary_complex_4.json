@@ -101,7 +101,7 @@
           ]
         }
       ],
-      "src": "a = my_function(k1: !b or 2)"
+      "src": "a = my_function(k1: not b or 2)"
     }
   },
   "entrypoint": "1",
