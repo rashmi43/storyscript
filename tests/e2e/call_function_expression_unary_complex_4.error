@@ -1,0 +1,6 @@
+Error: syntax error in story at line 5, column 27
+
+5|    a = my_function(k1: not b or 2)
+                                ^
+
+E0046: An indented block is required to be before here

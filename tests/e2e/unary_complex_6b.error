@@ -1,0 +1,6 @@
+Error: syntax error in story at line 1, column 5
+
+1|    a = not -2 or not -3 - -4
+          ^^^
+
+E0030: `not` is reserved for future use

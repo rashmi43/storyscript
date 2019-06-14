@@ -1,0 +1,6 @@
+Error: syntax error in story at line 2, column 14
+
+2|    a = not not b
+                   ^
+
+E0054: Arguments need to be declared with `key:value`
