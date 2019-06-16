@@ -1,6 +1,15 @@
+<<<<<<< HEAD
 Error: syntax error in story at line 3, column 15
 
 3|    a = b and not c
                     ^
 
 E0007: Missing value after `=`
+=======
+Error: syntax error in story at line 3, column 5
+
+3|    a = b and !c
+          ^^^^^^^
+
+E0122: `int` can't be converted to `boolean`
+>>>>>>> 9dd515a899a05012800e23470b9ecf3577fe4090

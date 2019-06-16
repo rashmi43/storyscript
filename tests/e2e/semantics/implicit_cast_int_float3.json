@@ -1,0 +1,36 @@
+{
+  "tree": {
+    "1": {
+      "method": "expression",
+      "ln": "1",
+      "name": [
+        "a"
+      ],
+      "args": [
+        {
+          "$OBJECT": "expression",
+          "expression": "division",
+          "values": [
+            {
+              "$OBJECT": "float",
+              "float": 1.5
+            },
+            {
+              "$OBJECT": "type_cast",
+              "type": {
+                "$OBJECT": "type",
+                "type": "float"
+              },
+              "value": {
+                "$OBJECT": "int",
+                "int": 1
+              }
+            }
+          ]
+        }
+      ],
+      "src": "a = 1.5 / 1"
+    }
+  },
+  "entrypoint": "1"
+}

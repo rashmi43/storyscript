@@ -1,6 +1,13 @@
 Error: syntax error in story at line 1, column 5
 
+<<<<<<< HEAD
 1|    a = not -2 or not -3 - not -4
           ^^^
 
 E0030: `not` is reserved for future use
+=======
+1|    a = !-2 or ! -3 - !-4
+          ^^^
+
+E0122: `int` can't be converted to `boolean`
+>>>>>>> 9dd515a899a05012800e23470b9ecf3577fe4090

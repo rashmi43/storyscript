@@ -1,0 +1,36 @@
+{
+  "tree": {
+    "1": {
+      "method": "expression",
+      "ln": "1",
+      "name": [
+        "a"
+      ],
+      "args": [
+        {
+          "$OBJECT": "expression",
+          "expression": "equal",
+          "values": [
+            {
+              "$OBJECT": "type_cast",
+              "type": {
+                "$OBJECT": "type",
+                "type": "float"
+              },
+              "value": {
+                "$OBJECT": "int",
+                "int": 2
+              }
+            },
+            {
+              "$OBJECT": "float",
+              "float": 3.5
+            }
+          ]
+        }
+      ],
+      "src": "a = 2 == 3.5"
+    }
+  },
+  "entrypoint": "1"
+}

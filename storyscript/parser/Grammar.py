@@ -93,8 +93,12 @@ class Grammar:
     def assignments(self):
         self.ebnf.EQUALS = '='
         self.ebnf._DOT = '.'
-        path_fragment = ('dot name, osb number csb, osb string csb, '
-                         'osb path csb, osb boolean csb')
+        self.ebnf.range_start = '(number | path) colon'
+        self.ebnf.range_start_end = '(number | path) colon (number | path)'
+        self.ebnf.range_end = 'colon (number | path)'
+        self.ebnf.range = 'range_start_end | range_start | range_end'
+        path_fragment = ('dot name, osb '
+                         '(number | string | path | boolean | range) csb')
         self.ebnf.path_fragment = path_fragment
         self.ebnf.path = ('name (path_fragment)* | '
                           'inline_expression (path_fragment)*')
@@ -142,9 +146,11 @@ class Grammar:
         self.ebnf.output_names = 'name (comma name)*'
         self.ebnf.as_operator = 'as (types | output_names)'
         self.ebnf.pow_operator = 'POWER'
+        self.ebnf.dot_expression = 'dot name (op arguments cp)'
         self.ebnf.pow_expression = ('primary_expression ((pow_operator '
-                                    'unary_expression)'
-                                    ' | as_operator)?')
+                                    'unary_expression) |'
+                                    'as_operator |'
+                                    'dot_expression )?')
         self.ebnf.unary_expression = ('unary_operator unary_expression , '
                                       'pow_expression')
         self.ebnf.mul_expression = '(mul_expression mul_operator)? ' \
@@ -197,7 +203,8 @@ class Grammar:
                                     'chained_mutation*')
 
     def call_expression(self):
-        self.ebnf.call_expression = 'path op arguments* cp'
+        self.ebnf.call_expression = ('path op arguments* '
+                                     '(nl indent (arguments nl?)* dedent)? cp')
 
     def if_block(self):
         self.ebnf._IF = 'if'

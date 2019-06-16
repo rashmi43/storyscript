@@ -1,0 +1,75 @@
+{
+  "tree": {
+    "1": {
+      "method": "expression",
+      "ln": "1",
+      "name": [
+        "a"
+      ],
+      "args": [
+        {
+          "$OBJECT": "expression",
+          "expression": "or",
+          "values": [
+            {
+              "$OBJECT": "expression",
+              "expression": "not",
+              "values": [
+                {
+                  "$OBJECT": "expression",
+                  "expression": "equal",
+                  "values": [
+                    {
+                      "$OBJECT": "int",
+                      "int": -2
+                    },
+                    {
+                      "$OBJECT": "int",
+                      "int": 0
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "$OBJECT": "expression",
+              "expression": "not",
+              "values": [
+                {
+                  "$OBJECT": "expression",
+                  "expression": "equal",
+                  "values": [
+                    {
+                      "$OBJECT": "expression",
+                      "expression": "subtraction",
+                      "values": [
+                        {
+                          "$OBJECT": "int",
+                          "int": -3
+                        },
+                        {
+                          "$OBJECT": "int",
+                          "int": -4
+                        }
+                      ]
+                    },
+                    {
+                      "$OBJECT": "int",
+                      "int": 3
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+<<<<<<< HEAD:tests/e2e/unary_complex_2.json
+      "src": "a = not 2 == not 3 or not 4"
+=======
+      "src": "a = !(-2 == 0) or ! (-3 - -4 == 3)"
+>>>>>>> 9dd515a899a05012800e23470b9ecf3577fe4090:tests/e2e/unary_complex_6c.json
+    }
+  },
+  "entrypoint": "1"
+}

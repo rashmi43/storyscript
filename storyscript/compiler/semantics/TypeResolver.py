@@ -1,31 +1,14 @@
 # -*- coding: utf-8 -*-
-from storyscript.compiler.semantics.types.Types import AnyType, NoneType, \
-    ObjectType
+from storyscript.compiler.semantics.types.Types import NoneType, ObjectType
 from storyscript.parser import Tree
 
 from .ExpressionResolver import ExpressionResolver
 from .PathResolver import PathResolver
 from .ReturnVisitor import ReturnVisitor
 from .SymbolResolver import SymbolResolver
-from .functions.FunctionTable import FunctionTable
-from .functions.MutationTable import MutationTable
-from .symbols.Scope import Scope
+from .Visitors import ScopeSelectiveVisitor
+from .symbols.Scope import Scope, ScopeJoiner
 from .symbols.Symbols import StorageClass, Symbol
-
-
-class ScopeSelectiveVisitor:
-    """
-    A selective visitor which only visits defined nodes.
-    visit_children must be called explicitly.
-    """
-    def visit(self, tree, scope=None):
-        if hasattr(self, tree.data):
-            return getattr(self, tree.data)(tree, scope)
-
-    def visit_children(self, tree, scope):
-        for c in tree.children:
-            if isinstance(c, Tree):
-                self.visit(c, scope)
 
 
 class ScopeBlock:
@@ -35,16 +18,23 @@ class ScopeBlock:
     This means that scopes are essentially a single-linked list up to the root
     scope.
     """
-    def __init__(self, type_resolver, scope):
+    def __init__(self, type_resolver, scope, storage_class):
         assert scope is not None
         self.type_resolver = type_resolver
         self.scope = scope
+        self.storage_class = storage_class
 
     def __enter__(self):
+        if self.storage_class is not None:
+            self.prev_storage_class = self.type_resolver.storage_class_scope
+            self.type_resolver.storage_class_scope = self.storage_class
         self.prev_scope = self.type_resolver.current_scope
         self.type_resolver.update_scope(self.scope)
+        return self.scope
 
     def __exit__(self, exc_type, exc_value, traceback):
+        if self.storage_class is not None:
+            self.type_resolver.storage_class_scope = self.prev_storage_class
         self.type_resolver.update_scope(self.prev_scope)
 
 
@@ -52,10 +42,9 @@ class TypeResolver(ScopeSelectiveVisitor):
     """
     Tries to resolve the type of a variable or function call.
     """
-    def __init__(self):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.symbol_resolver = SymbolResolver(scope=None)
-        self.function_table = FunctionTable()
-        self.mutation_table = MutationTable.init()
         self.resolver = ExpressionResolver(
             symbol_resolver=self.symbol_resolver,
             function_table=self.function_table,
@@ -66,6 +55,10 @@ class TypeResolver(ScopeSelectiveVisitor):
         self.path_resolver = PathResolver(self.path_symbol_resolver)
         self.in_service_block = False
         self.in_when_block = False
+        if self.features.globals:
+            self.storage_class_scope = StorageClass.write
+        else:
+            self.storage_class_scope = StorageClass.read
 
     def assignment(self, tree, scope):
         target_symbol = self.path_resolver.path(tree.path)
@@ -76,6 +69,9 @@ class TypeResolver(ScopeSelectiveVisitor):
         frag = tree.assignment_fragment
         expr_sym = self.resolver.base_expression(frag.base_expression)
         expr_type = expr_sym.type()
+        storage_class = expr_sym._storage_class
+        if expr_sym.can_write():
+            storage_class = self.storage_class_scope
 
         token = frag.child(0)
         tree.expect('/' not in token.value,
@@ -88,7 +84,7 @@ class TypeResolver(ScopeSelectiveVisitor):
                 frag.base_expression.expect(expr_type != NoneType.instance(),
                                             'assignment_type_none')
             sym = Symbol(target_symbol.name(), expr_type,
-                         storage_class=expr_sym._storage_class)
+                         storage_class=storage_class)
             scope.symbols().insert(sym)
         else:
             tree.expect(target_symbol.type().can_be_assigned(expr_type),
@@ -171,22 +167,25 @@ class TypeResolver(ScopeSelectiveVisitor):
         """
         self.resolver.base_expression(tree.base_expression)
 
+    def check_output(self, tree, output, target):
+        output.expect(len(output.children) == 1, 'output_type_only_one',
+                      target=target)
+
+        name = output.children[0]
+        resolved = tree.scope.resolve(name)
+        output.expect(resolved is None, 'output_unique',
+                      name=resolved.name() if resolved else None)
+        sym = Symbol.from_path(name, ObjectType.instance(),
+                               storage_class=StorageClass.read)
+        tree.scope.insert(sym)
+
     def when_block(self, tree, scope):
         tree.scope = Scope(parent=scope)
-        with self.create_scope(tree.scope):
+        with self.create_scope(tree.scope, storage_class=StorageClass.write):
             self.implicit_output(tree)
 
             output = tree.service.service_fragment.output
-            output.expect(len(output.children) == 1, 'output_type_only_one',
-                          target='when')
-
-            name = output.children[0]
-            resolved = tree.scope.resolve(name)
-            output.expect(resolved is None, 'output_unique',
-                          name=resolved.name() if resolved else None)
-            sym = Symbol.from_path(name, ObjectType.instance(),
-                                   storage_class=StorageClass.read)
-            tree.scope.insert(sym)
+            self.check_output(tree, output, target='when')
 
             tree.expect(not self.in_when_block, 'nested_when_block')
             self.in_when_block = True
@@ -212,16 +211,7 @@ class TypeResolver(ScopeSelectiveVisitor):
 
             output = tree.service.service_fragment.output
             if output is not None:
-                output.expect(len(output.children) == 1,
-                              'output_type_only_one', target='service')
-
-                name = output.children[0]
-                resolved = tree.scope.resolve(name)
-                output.expect(resolved is None, 'output_unique',
-                              name=resolved.name() if resolved else None)
-                sym = Symbol(name, ObjectType.instance(),
-                             storage_class=StorageClass.read)
-                tree.scope.insert(sym)
+                self.check_output(tree, output, target='service')
 
             if tree.nested_block:
                 tree.expect(not self.in_service_block, 'nested_service_block')
@@ -234,14 +224,19 @@ class TypeResolver(ScopeSelectiveVisitor):
         tree.expect(0, 'nested_when_block')
 
     def if_block(self, tree, scope):
-        tree.scope = Scope(parent=scope)
-        with self.create_scope(tree.scope):
-            self.if_statement(tree.if_statement, tree.scope)
+        self.if_statement(tree.if_statement, scope)
+        scope_joiner = ScopeJoiner()
 
-            self.visit_children(tree.nested_block, scope=tree.scope)
+        with self.create_scope(Scope(parent=scope)) as if_scope:
+            self.visit_children(tree.nested_block, scope=if_scope)
+            scope_joiner.add(if_scope)
 
-            for c in tree.children[2:]:
-                self.visit(c, tree.scope)
+        for c in tree.children[2:]:
+            with self.create_scope(Scope(parent=scope)) as if_scope:
+                self.visit(c, scope=if_scope)
+                scope_joiner.add(if_scope)
+
+        scope_joiner.insert_to(scope)
 
     def if_statement(self, tree, scope):
         """
@@ -279,7 +274,7 @@ class TypeResolver(ScopeSelectiveVisitor):
         tree.scope, return_type = self.function_statement(
             tree.function_statement, scope
         )
-        with self.create_scope(tree.scope):
+        with self.create_scope(tree.scope, storage_class=StorageClass.write):
             self.visit_children(tree.nested_block, scope=tree.scope)
             ReturnVisitor.check(tree, tree.scope, return_type,
                                 self.function_table, self.mutation_table)
@@ -290,28 +285,11 @@ class TypeResolver(ScopeSelectiveVisitor):
         Prepopulate the scope with symbols from the function arguments.
         """
         scope = Scope.root()
-        return_type = AnyType.instance()
-        args = {}
-        for c in tree.children[2:]:
-            if isinstance(c, Tree) and c.data == 'typed_argument':
-                name = c.child(0)
-                e_sym = self.resolver.types(c.types)
-                sym = Symbol.from_path(name, e_sym.type())
-                scope.insert(sym)
-                args[sym.name()] = sym
-        # add function to the function table
         function_name = tree.child(1).value
-        tree.expect(self.function_table.resolve(function_name) is None,
-                    'function_redeclaration', name=function_name)
-        output = tree.function_output
-        if output is not None:
-            output = self.resolver.types(output.types).type()
-        self.function_table.insert(function_name, args, output)
-        if tree.function_output:
-            return_type = self.resolver.types(
-                tree.function_output.types
-            ).type()
-        return scope, return_type
+        function = self.function_table.resolve(function_name)
+        for arg, sym in function._args.items():
+            scope.insert(sym)
+        return scope, function._output
 
     def update_scope(self, scope):
         """
@@ -321,8 +299,8 @@ class TypeResolver(ScopeSelectiveVisitor):
         self.symbol_resolver.update_scope(scope)
         self.path_symbol_resolver.update_scope(scope)
 
-    def create_scope(self, scope):
-        return ScopeBlock(self, scope)
+    def create_scope(self, scope, storage_class=None):
+        return ScopeBlock(self, scope, storage_class)
 
     def start(self, tree, scope=None):
         # create the root scope

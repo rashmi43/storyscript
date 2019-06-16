@@ -1,6 +1,15 @@
+<<<<<<< HEAD
 Error: syntax error in story at line 1, column 21
 
 1|    a = not (my_service command k1: not b) or not (my_service2 command k2: not not c)
                           ^
 
 E0046: An indented block is required to be before here
+=======
+Error: syntax error in story at line 1, column 5
+
+1|    a = ! (my_service command k1: !b) or !(my_service2 command k2: ! !c)
+          ^
+
+E0122: `any` can't be converted to `boolean`
+>>>>>>> 9dd515a899a05012800e23470b9ecf3577fe4090

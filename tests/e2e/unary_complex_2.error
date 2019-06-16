@@ -1,6 +1,15 @@
+<<<<<<< HEAD
 Error: syntax error in story at line 1, column 9
 
 1|    a = not 2 == not 3 or not 4
               ^
 
 E0043: `2` is not allowed here. Allowed: ['_COMMA', '_CSB', '_CCB', '_NL', '_AS']
+=======
+Error: syntax error in story at line 1, column 5
+
+1|    a = ! 2 == !3 or ! 4
+          ^^^
+
+E0122: `int` can't be converted to `boolean`
+>>>>>>> 9dd515a899a05012800e23470b9ecf3577fe4090

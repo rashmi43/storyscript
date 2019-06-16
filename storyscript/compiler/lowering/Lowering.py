@@ -22,12 +22,13 @@ class Lowering:
     too complicated for the Transformer, before the tree is compiled.
     """
 
-    def __init__(self, parser):
+    def __init__(self, parser, features):
         """
         Saves the used parser as it might be used again for re-evaluation
         of new statements (e.g. for string interpolation)
         """
         self.parser = parser
+        self.features = features
 
     @staticmethod
     def fake_tree(block):
@@ -78,6 +79,9 @@ class Lowering:
         elif node.data == 'service' and node.child(0).data == 'path':
             entity = node
 
+        for c in node.children:
+            cls.visit(c, block, entity, pred, fun, parent=node)
+
         # create fake lines for base_expressions too, but only when required:
         # 1) `expressions` are already allowed to be nested
         # 2) `assignment_fragments` are ignored to avoid two lines for simple
@@ -88,9 +92,6 @@ class Lowering:
             # replace base_expression too
             fun(node, block, node)
             node.children = [Tree('path', node.children)]
-
-        for c in node.children:
-            cls.visit(c, block, entity, pred, fun, parent=node)
 
         if pred(node):
             assert entity is not None
@@ -245,7 +246,7 @@ class Lowering:
         # add whitespace as padding to fixup the column location of the
         # resulting tokens.
         from storyscript.Story import Story
-        story = Story(' ' * column + code_string)
+        story = Story(' ' * column + code_string, features=self.features)
         story.parse(self.parser)
         new_node = story.tree
 
@@ -286,7 +287,7 @@ class Lowering:
 
     def concat_string_templates(self, fake_tree, orig_node, string_objs):
         """
-        Concatenes the to-be-inserted string templates.
+        Concatenates the to-be-inserted string templates.
         For example, a string template like "a{exp}b" gets flatten to:
             "a" + fake_path_to_exp as string + "b"
 
@@ -683,6 +684,66 @@ class Lowering:
         for c in node.children:
             self.visit_as_expr(c, block)
 
+    def visit_function_dot(self, node, block):
+        """
+        Visit function call with more than one path and lower
+        them into mutations.
+        """
+        if not hasattr(node, 'children') or len(node.children) == 0:
+            return
+
+        if node.data == 'call_expression':
+            call_expr = node
+            if len(call_expr.path.children) > 1:
+                path_fragments = call_expr.path.children
+                call_expr.children = [
+                    Tree('primary_expression', [
+                        Tree('entity', [
+                            Tree('path', call_expr.path.children[:-1])
+                        ])
+                    ]),
+                    Tree('mutation_fragment', [
+                        path_fragments[-1].children[0],
+                        *call_expr.children[1:]
+                    ])
+                ]
+                call_expr.data = 'mutation'
+
+        for c in node.children:
+            self.visit_function_dot(c, block)
+
+    def visit_dot_expression(self, node, block, parent):
+        """
+        Visit dot expression and lower them into mutation fragments.
+        """
+        if not hasattr(node, 'children') or len(node.children) == 0:
+            return
+
+        if node.data == 'block':
+            # only generate a fake_block once for every line
+            # node: block in which the fake assignments should be inserted
+            block = self.fake_tree(node)
+
+        if node.data == 'dot_expression':
+            dot_expr = node
+            expression = Tree('mutation', [
+                parent.primary_expression,
+                Tree('mutation_fragment', [
+                    dot_expr.child(0),  # name
+                    dot_expr.arguments
+                ])
+            ])
+            path = block.add_assignment(expression,
+                                        original_line=parent.line())
+            parent.children = [Tree('primary_expression', [
+                Tree('entity', [
+                    path
+                ])
+            ])]
+
+        for c in node.children:
+            self.visit_dot_expression(c, block, parent=node)
+
     def process(self, tree):
         """
         Applies several preprocessing steps to the existing AST.
@@ -695,6 +756,8 @@ class Lowering:
         self.visit_assignment(tree, block=None, parent=None)
         self.visit_string_templates(tree, block=None, parent=None,
                                     cmp_expr=None)
+        self.visit_function_dot(tree, block=None)
+        self.visit_dot_expression(tree, block=None, parent=None)
         self.visit(tree, None, None, pred,
                    self.replace_expression, parent=None)
         return tree

@@ -1,0 +1,52 @@
+{
+  "tree": {
+    "1": {
+      "method": "execute",
+      "ln": "1",
+      "name": [
+        "any_var"
+      ],
+      "service": "my_service",
+      "command": "call",
+      "src": "any_var = my_service call",
+      "next": "2"
+    },
+    "2": {
+      "method": "expression",
+      "ln": "2",
+      "name": [
+        "a"
+      ],
+      "args": [
+        {
+          "$OBJECT": "expression",
+          "expression": "equal",
+          "values": [
+            {
+              "$OBJECT": "type_cast",
+              "type": {
+                "$OBJECT": "type",
+                "type": "regex"
+              },
+              "value": {
+                "$OBJECT": "path",
+                "paths": [
+                  "any_var"
+                ]
+              }
+            },
+            {
+              "$OBJECT": "regexp",
+              "regexp": "fo"
+            }
+          ]
+        }
+      ],
+      "src": "a = any_var == /fo/"
+    }
+  },
+  "services": [
+    "my_service"
+  ],
+  "entrypoint": "1"
+}

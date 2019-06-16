@@ -22,7 +22,7 @@ class Transformer(LarkTransformer):
         'const', 'immutable', 'let', 'var', 'auto', 'immutable', 'switch',
         'module', 'package', 'final', 'this', 'self', 'case', 'abstract',
         'static', 'none', 'await', 'service', 'in', 'has', 'not', 'is', 'inf',
-        'nan'
+        'nan', 'unknown'
     ]
 
     @classmethod
@@ -32,10 +32,12 @@ class Transformer(LarkTransformer):
             return
         if keyword in cls.reserved_keywords:
             raise StorySyntaxError('reserved_keyword',
-                                   token=token, format={'keyword': keyword})
+                                   token=token,
+                                   format_args={'keyword': keyword})
         if keyword in cls.future_reserved_keywords:
             raise StorySyntaxError('future_reserved_keyword',
-                                   token=token, format={'keyword': keyword})
+                                   token=token,
+                                   format_args={'keyword': keyword})
         if keyword.startswith('__'):
             raise StorySyntaxError('path_name_internal', token=token)
 

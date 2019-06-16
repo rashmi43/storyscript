@@ -1,0 +1,36 @@
+{
+  "tree": {
+    "1": {
+      "method": "expression",
+      "ln": "1",
+      "name": [
+        "a"
+      ],
+      "args": [
+        {
+          "$OBJECT": "expression",
+          "expression": "sum",
+          "values": [
+            {
+              "$OBJECT": "type_cast",
+              "type": {
+                "$OBJECT": "type",
+                "type": "float"
+              },
+              "value": {
+                "$OBJECT": "int",
+                "int": 1
+              }
+            },
+            {
+              "$OBJECT": "float",
+              "float": 1.5
+            }
+          ]
+        }
+      ],
+      "src": "a = 1 + 1.5"
+    }
+  },
+  "entrypoint": "1"
+}
